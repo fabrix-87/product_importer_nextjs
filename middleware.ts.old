@@ -1,0 +1,30 @@
+import { AuthContext } from '@/providers/AuthProvides';
+import { NextRequest, NextResponse } from 'next/server';
+import { useContext } from 'react';
+import useSWR from 'swr';
+import { User } from './types';
+import axios from './lib/axios';
+
+export const config = {
+    matcher: [
+      '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    ],
+}
+
+
+export function middleware(request: NextRequest) {
+  const boh = axios.get('/api/user').then(
+    (response) => console.log(response) 
+  )
+
+  const isAuthenticated = !!boh
+
+  // Se l'utente non è loggato, reindirizza a /login
+  if (!isAuthenticated && !request.nextUrl.pathname.startsWith('/login')) {
+  //if (!isAuthenticated) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  // Se l'utente è loggato, continua con la richiesta
+  return NextResponse.next();
+}
