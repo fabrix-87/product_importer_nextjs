@@ -63,7 +63,6 @@ export const useAuth = (
         return error;
     }
 
-
     return {
         login,
         logout,
