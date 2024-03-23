@@ -14,9 +14,10 @@ const Login = () => {
     const [password, setPassword] = useState('')
     const [shouldRemember, setShouldRemember] = useState(false)
     const [errors, setErrors] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(false)
 
     const submitForm = async () => {
-        login(email, password, setErrors)
+        login(email, password, setErrors, setIsLoading)
     }
 
     return (
@@ -80,6 +81,7 @@ const Login = () => {
 
                     <Button 
                         className="ml-3"
+                        isLoading={isLoading}
                         onPress={submitForm}>
                             Login
                     </Button>

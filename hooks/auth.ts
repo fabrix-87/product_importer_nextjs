@@ -27,14 +27,22 @@ export const useAuth = (
 
     const csrf = () => axios.get('/sanctum/csrf-cookie')
 
-    const login = async (email: string, password: string, setErrors: (errors: string[]) => void) => {
+    const login = async (
+        email: string, 
+        password: string, 
+        setErrors: (errors: string[]) => void, 
+        isLoading: (isLoading: boolean) => void
+    ) => {
+        isLoading(true)
         await csrf()
-
         setErrors([])
 
         axios
             .post('/login', {email: email, password: password})
-            .then(() => mutate())
+            .then(() => {
+                mutate()
+                isLoading(false)
+            })
             .catch(error => {
                 if (error.response.status !== 422) throw error
 

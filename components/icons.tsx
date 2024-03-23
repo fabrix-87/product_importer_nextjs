@@ -212,3 +212,23 @@ export const NextUILogo: React.FC<IconSvgProps> = (props) => {
     </svg>
   );
 };
+
+export const LogoutIcon  = (props: IconSvgProps) => (
+	<svg
+		aria-hidden="true"
+		fill="none"
+		focusable="false"
+		height="1em"
+		role="presentation"
+		viewBox="0 0 24 24"
+		width="1em"
+		{...props}
+	>
+		<path 
+			className="stroke-black dark:stroke-white"
+			d="M15 3H7C5.89543 3 5 3.89543 5 5V19C5 20.1046 5.89543 21 7 21H15" stroke="#000000" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
+		<path 
+			className="stroke-black dark:stroke-white"
+			d="M19 12L15 8M19 12L15 16M19 12H9" stroke="#000000" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
+	</svg>
+);

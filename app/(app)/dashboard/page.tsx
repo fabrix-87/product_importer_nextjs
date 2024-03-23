@@ -6,9 +6,16 @@ import { button as buttonStyles } from "@nextui-org/theme";
 import { siteConfig } from "@/config/site";
 import { title, subtitle } from "@/components/primitives";
 import { GithubIcon } from "@/components/icons";
+import { SuppliersCard } from "./SuppliersCard";
+import { ProductsCard } from "./ProductsCard";
 
 export default function Home() {
 	return (
+		<>		
+		<section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+			<SuppliersCard totalSuppliers={5}/>
+			<ProductsCard totalProducts={200} totalCombinations={500}/>
+		</section>
 		<section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
 			<div className="inline-block max-w-lg text-center justify-center">
 				<h1 className={title()}>Make&nbsp;</h1>
@@ -48,5 +55,6 @@ export default function Home() {
 				</Snippet>
 			</div>
 		</section>
+		</>
 	);
 }
