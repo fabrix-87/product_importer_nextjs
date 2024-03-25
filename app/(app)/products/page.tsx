@@ -73,11 +73,11 @@ export default function ProductsPage() {
 	const filteredItems = useMemo(() => {
 		let filteredProducts = [...products];
 
+		console.log({searchValue, hasSearchFilter})
+
 		if (hasSearchFilter) {
 			filteredProducts = filteredProducts.filter((product) => {
-				console.log(product.languages)
-				if(product.languages)
-					product.languages.pivot.name.toLowerCase().includes(searchValue.toLowerCase())
+				product.languages[0].pivot.name.toLowerCase().includes(searchValue.toLowerCase())
 			});
 		}
 		if (statusFilter !== productsStatus.any) {
@@ -88,7 +88,7 @@ export default function ProductsPage() {
 		}
 
 		return filteredProducts;
-	}, [products, hasSearchFilter, statusFilter, searchValue]);
+	}, [products, statusFilter, searchValue]);
 
 	const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -112,7 +112,6 @@ export default function ProductsPage() {
 		let cellValue = '';
 
 		if(columnKey == 'name' &&  product.languages){
-			console.log(product)
 			cellValue = product.languages[0].pivot.name
 		}
 		else

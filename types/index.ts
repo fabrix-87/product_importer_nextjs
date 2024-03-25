@@ -15,10 +15,24 @@ export interface ErrorData {
   message: string;
 }
 
-export interface Product {
+export type Product = {
   id: number;
   reference: string;
   active: number;
   presta_id: number;
   supplier_id: number;
+  parent_id: number;
+  languages: ProductLanguage[]
+}
+
+export type ProductLanguage = {
+  id: number;
+  iso_code: string;
+  name: string;
+  language_code: string;
+  pivot: {
+    description: string;
+    name: string;
+    short_description: string;
+  }
 }

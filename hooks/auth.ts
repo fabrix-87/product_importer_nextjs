@@ -1,6 +1,6 @@
 'use client'
 import { useEffect } from 'react';
-import { User } from '@/types'; // Dichiara l'interfaccia utente qui
+import { ErrorData, User } from '@/types'; // Dichiara l'interfaccia utente qui
 import axios from '@/lib/axios';
 import useSWR from 'swr';
 import { useRouter } from 'next/navigation';
@@ -30,23 +30,25 @@ export const useAuth = (
     const login = async (
         email: string, 
         password: string, 
-        setErrors: (errors: string[]) => void, 
+        remember: boolean,
+        setErrors: (errors: ErrorData|null) => void, 
         isLoading: (isLoading: boolean) => void
     ) => {
         isLoading(true)
         await csrf()
-        setErrors([])
+        setErrors(null)
 
         axios
             .post('/login', {email: email, password: password})
             .then(() => {
                 mutate()
                 isLoading(false)
+                setErrors({status:200, message: 'success'})
             })
             .catch(error => {
                 if (error.response.status !== 422) throw error
-
-                setErrors(error.response.data.errors)
+                isLoading(false)
+                setErrors({status:422, message: error.response.data.message})
             })
     }
 
