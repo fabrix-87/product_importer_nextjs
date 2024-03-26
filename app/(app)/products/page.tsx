@@ -1,7 +1,7 @@
 'use client'
 import { title } from "@/components/primitives";
 
-import { ChangeEvent, ChangeEventHandler, useCallback, useEffect, useMemo, useState } from "react";
+import React, { ChangeEvent, ChangeEventHandler, useCallback, useEffect, useMemo, useState } from "react";
 
 import { Icon } from '@iconify/react';
 import { columns, productColumnsType, statusOptions } from "./data";
@@ -13,82 +13,71 @@ import {
 	DropdownTrigger,
 } from "@nextui-org/dropdown";
 import { Button } from "@nextui-org/button";
-import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/table";
+import { Selection, SortDescriptor, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/table";
 import { productFilters, useProducts } from "@/hooks/products";
-import { Chip } from "@nextui-org/chip";
+import { Chip, ChipProps } from "@nextui-org/chip";
 import { Pagination } from "@nextui-org/pagination";
+import { Product } from "@/types";
 
-const statusColorMap = {
-	active: "success",
-	disabled: "danger",
+const statusColorMap: Record<string, ChipProps["color"]> = {
+	1: "success",
+	0: "danger",
 }
 
-enum productsStatus {
-	any,
-	active = 1,
-	inactive = 0,
-}
-
-const INITIAL_VISIBLE_COLUMNS = ["reference", "name", "status", "supplier"];
+const INITIAL_VISIBLE_COLUMNS = ["reference", "name", "status", "supplier","actions"];
 
 export default function ProductsPage() {
-	const [searchValue, setSearchValue] = useState('')
 	const [isLoading, setIsLoading] = useState(true)
 	const { getProducts } = useProducts()
-	const [products, setProducts] = useState<any>([])
+	const [products, setProducts] = useState<Product[]>([])
 
-	const [filterValue, setFilterValue] = useState<productFilters[]>([]);
-	const [selectedKeys, setSelectedKeys] = useState(new Set<string>([]));
-	const [visibleColumns, setVisibleColumns] = useState(
-		new Set<string>(INITIAL_VISIBLE_COLUMNS)
-	);
-	const [statusFilter, setStatusFilter] = useState<productsStatus>(productsStatus.any);
+	const [filterValue, setFilterValue] = useState("");
+	const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
+	const [visibleColumns, setVisibleColumns] = useState<Selection>(new Set(INITIAL_VISIBLE_COLUMNS));
+	const [statusFilter, setStatusFilter] = useState<Selection>("all");
 	const [rowsPerPage, setRowsPerPage] = useState(25);
-	const [sortDescriptor, setSortDescriptor] = useState({
+	const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
 		column: "id",
 		direction: "ascending",
 	});
+
 	const [page, setPage] = useState(1);
 
-	const hasSearchFilter = Boolean(searchValue);
+	const hasSearchFilter = Boolean(filterValue);
 
 	useEffect(() => {
 		const fetchProducts = async () => {
-			await getProducts().then( (res) => {
+			await getProducts().then((res) => {
 				setProducts(res.data['data'])
 				setIsLoading(false)
 			})
 		}
 		fetchProducts()
 
-		return () => {}
-	},[])
+		return () => { }
+	}, [])
 
 	const headerColumns = useMemo(() => {
-		return columns.filter((column: productColumnsType) =>
-			Array.from(visibleColumns).includes(column.uid)
-		);
+		if (visibleColumns === "all") return columns;
+
+		return columns.filter((column) => Array.from(visibleColumns).includes(column.uid));
 	}, [visibleColumns]);
 
 	const filteredItems = useMemo(() => {
 		let filteredProducts = [...products];
 
-		console.log({searchValue, hasSearchFilter})
-
 		if (hasSearchFilter) {
-			filteredProducts = filteredProducts.filter((product) => {
-				product.languages[0].pivot.name.toLowerCase().includes(searchValue.toLowerCase())
-			});
-		}
-		if (statusFilter !== productsStatus.any) {
-			console.log(statusFilter)
-			filteredProducts = filteredProducts.filter((user) =>
-				user.active = statusFilter
+			filteredProducts = filteredProducts.filter((product) =>
+				product.reference.toLowerCase().includes(filterValue.toLowerCase()) || product.languages[0].pivot.name.toLowerCase().includes(filterValue.toLowerCase()),
 			);
 		}
-
+		if (statusFilter !== "all" && Array.from(statusFilter).length !== statusOptions.length) {
+			filteredProducts = filteredProducts.filter((product) =>
+				Array.from(statusFilter).includes(product.active),
+			);
+		}
 		return filteredProducts;
-	}, [products, statusFilter, searchValue]);
+	}, [products, filterValue, statusFilter]);
 
 	const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -98,41 +87,54 @@ export default function ProductsPage() {
 		return filteredItems.slice(start, end);
 	}, [page, filteredItems, rowsPerPage]);
 
+
 	const sortedItems = useMemo(() => {
-		return [...items].sort((a, b) => {
-			const first = a[sortDescriptor.column];
-			const second = b[sortDescriptor.column];
+		return [...items].sort((a: Product, b: Product) => {
+			const first = a[sortDescriptor.column as keyof Product] as number;
+			const second = b[sortDescriptor.column as keyof Product] as number;
 			const cmp = first < second ? -1 : first > second ? 1 : 0;
 			return sortDescriptor.direction === "descending" ? -cmp : cmp;
 		});
 	}, [sortDescriptor, items]);
 
-
-	const renderCell = useCallback((product: any, columnKey: any) => {
-		let cellValue = '';
-
-		if(columnKey == 'name' &&  product.languages){
-			cellValue = product.languages[0].pivot.name
-		}
-		else
-			cellValue = product[columnKey];
-
+	const renderCell = useCallback((product: Product, columnKey: React.Key) => {
+		const cellValue = product[columnKey as keyof Product];
 		switch (columnKey) {
 			case "reference":
+				return (
+					<div>
+						{product.reference}
+					</div>
+				);
 			case "name":
 				return (
 					<div className="flex flex-col">
-						{cellValue}
-					</div>				
+						{product.languages[0].pivot.name}
+					</div>
 				);
 			case "status":
 				return (
-					<Chip className="capitalize" color={
-						product.active == 1 ? 'success' : 'danger'
-					} size="sm" variant="flat">
-						{cellValue}
+					<Chip className="capitalize" color={statusColorMap[product.active]} size="sm" variant="flat">
+						{product.active == 1 ? 'Attivo' : 'Disattivato'}
 					</Chip>
-				);			
+				);
+			case "actions":
+				return (
+					<div className="relative flex justify-end items-center gap-2">
+						<Dropdown>
+							<DropdownTrigger>
+								<Button isIconOnly size="sm" variant="light">
+									<Icon icon="mdi:dots-vertical" />
+								</Button>
+							</DropdownTrigger>
+							<DropdownMenu>
+								<DropdownItem>View</DropdownItem>
+								<DropdownItem>Edit</DropdownItem>
+								<DropdownItem>Delete</DropdownItem>
+							</DropdownMenu>
+						</Dropdown>
+					</div>
+				);
 			default:
 				return cellValue;
 		}
@@ -157,15 +159,15 @@ export default function ProductsPage() {
 
 	const onSearchChange = useCallback((value: string) => {
 		if (value) {
-			setSearchValue(value);
-			//setPage(1);
+			setFilterValue(value);
+			setPage(1);
 		} else {
-			setSearchValue('');
+			setFilterValue('');
 		}
 	}, []);
 
 	const onClear = useCallback(() => {
-		setFilterValue([]);
+		setFilterValue("");
 		setPage(1);
 	}, []);
 
@@ -178,7 +180,7 @@ export default function ProductsPage() {
 						className="w-full sm:max-w-[44%]"
 						placeholder="Search by name..."
 						startContent={<Icon icon="mdi:search" />}
-						value={searchValue}
+						value={filterValue}
 						onClear={() => onClear()}
 						onValueChange={onSearchChange}
 					/>
@@ -198,15 +200,15 @@ export default function ProductsPage() {
 							className="bg-transparent outline-none text-default-400 text-small"
 							onChange={onRowsPerPageChange}
 						>
-							<option value="5">5</option>
-							<option value="10">10</option>
-							<option value="15">15</option>
+							<option value="25">25</option>
+							<option value="50">50</option>
+							<option value="100">100</option>
 						</select>
 					</label>
 				</div>
 			</div>
 		);
-	}, [searchValue, onSearchChange, products.length, onRowsPerPageChange, onClear]);
+	}, [filterValue, onSearchChange, products.length, onRowsPerPageChange, onClear]);
 
 	const bottomContent = useMemo(() => {
 		return (
@@ -243,46 +245,40 @@ export default function ProductsPage() {
 	}, [page, pages, onPreviousPage, onNextPage]);
 
 	return (
-		<>
-			<div>
-				<h1 className={title()}>Prodotti</h1>
-			</div>
-			<Table
-				aria-label="Tabella prodotti su importer"
-				isHeaderSticky
-				bottomContent={bottomContent}
-				bottomContentPlacement="outside"
-				classNames={{
-					wrapper: "max-h-[382px]",
-				}}
-				selectedKeys={selectedKeys}
-				selectionMode="multiple"
-
-				topContent={topContent}
-				topContentPlacement="outside"
-
-			>
-				<TableHeader columns={headerColumns}>
-					{(column) => (
-						<TableColumn
-							key={column.uid}
-							align={column.uid === "actions" ? "center" : "start"}
-							allowsSorting={column.sortable}
-						>
-							{column.name}
-						</TableColumn>
-					)}
-				</TableHeader>
-				<TableBody emptyContent={"No users found"} items={sortedItems}>
-					{(item) => (
-						<TableRow key={item.id}>
-							{(columnKey) => (
-								<TableCell>{renderCell(item, columnKey)}</TableCell>
-							)}
-						</TableRow>
-					)}
-				</TableBody>
-			</Table>
-		</>
+		<Table
+			aria-label="Example table with custom cells, pagination and sorting"
+			isHeaderSticky
+			bottomContent={bottomContent}
+			bottomContentPlacement="outside"
+			classNames={{
+				wrapper: "max-h-[382px]",
+			}}
+			selectedKeys={selectedKeys}
+			selectionMode="multiple"
+			sortDescriptor={sortDescriptor}
+			topContent={topContent}
+			topContentPlacement="outside"
+			onSelectionChange={setSelectedKeys}
+			onSortChange={setSortDescriptor}
+		>
+			<TableHeader columns={headerColumns}>
+				{(column) => (
+					<TableColumn
+						key={column.uid}
+						align={column.uid === "actions" ? "center" : "start"}
+						allowsSorting={column.sortable}
+					>
+						{column.name}
+					</TableColumn>
+				)}
+			</TableHeader>
+			<TableBody emptyContent={"Nessun prodotto trovato"} items={sortedItems}>
+				{(item) => (
+					<TableRow key={item.id}>
+						{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+					</TableRow>
+				)}
+			</TableBody>
+		</Table>
 	);
 }
