@@ -1,10 +1,9 @@
 'use client'
-import { title } from "@/components/primitives";
 
-import React, { ChangeEvent, ChangeEventHandler, useCallback, useEffect, useMemo, useState } from "react";
+import React, { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import { Icon } from '@iconify/react';
-import { columns, productColumnsType, statusOptions } from "./data";
+import { columns, statusOptions } from "./data";
 import { Input } from "@nextui-org/input";
 import {
 	Dropdown,
@@ -14,7 +13,7 @@ import {
 } from "@nextui-org/dropdown";
 import { Button } from "@nextui-org/button";
 import { Selection, SortDescriptor, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/table";
-import { productFilters, useProducts } from "@/hooks/products";
+import { useProducts } from "@/hooks/products";
 import { Chip, ChipProps } from "@nextui-org/chip";
 import { Pagination } from "@nextui-org/pagination";
 import { Product } from "@/types";
@@ -24,7 +23,7 @@ const statusColorMap: Record<string, ChipProps["color"]> = {
 	0: "danger",
 }
 
-const INITIAL_VISIBLE_COLUMNS = ["reference", "name", "status", "supplier","actions"];
+const INITIAL_VISIBLE_COLUMNS = ["id", "reference", "name", "status", "supplier", "actions"];
 
 export default function ProductsPage() {
 	const [isLoading, setIsLoading] = useState(true)
@@ -47,15 +46,16 @@ export default function ProductsPage() {
 
 	useEffect(() => {
 		const fetchProducts = async () => {
-			await getProducts().then((res) => {
-				setProducts(res.data['data'])
-				setIsLoading(false)
-			})
+			const products = await getProducts()
+			setProducts(products)
+			setIsLoading(false)
 		}
 		fetchProducts()
-
-		return () => { }
 	}, [])
+
+	useEffect(() => {
+		console.log(statusFilter)
+	}, [statusFilter])
 
 	const headerColumns = useMemo(() => {
 		if (visibleColumns === "all") return columns;
@@ -123,14 +123,14 @@ export default function ProductsPage() {
 					<div className="relative flex justify-end items-center gap-2">
 						<Dropdown>
 							<DropdownTrigger>
-								<Button isIconOnly size="sm" variant="light">
-									<Icon icon="mdi:dots-vertical" />
+								<Button aria-label="Azioni" isIconOnly size="sm" variant="light">
+									<Icon icon="mdi:dots-vertical" aria-label="Azioni" />
 								</Button>
 							</DropdownTrigger>
 							<DropdownMenu>
-								<DropdownItem>View</DropdownItem>
-								<DropdownItem>Edit</DropdownItem>
-								<DropdownItem>Delete</DropdownItem>
+								<DropdownItem aria-label="Dettagli">Dettagli</DropdownItem>
+								<DropdownItem aria-label="Modifica">Modifica</DropdownItem>
+								<DropdownItem aria-label="Elimina">Elimina</DropdownItem>
 							</DropdownMenu>
 						</Dropdown>
 					</div>
@@ -178,15 +178,57 @@ export default function ProductsPage() {
 					<Input
 						isClearable
 						className="w-full sm:max-w-[44%]"
-						placeholder="Search by name..."
+						placeholder="Cerca per nome o codice..."
 						startContent={<Icon icon="mdi:search" />}
 						value={filterValue}
 						onClear={() => onClear()}
 						onValueChange={onSearchChange}
 					/>
 					<div className="flex gap-3">
-						<Button color="primary" endContent={<Icon icon="mdi:plus" />}>
-							Add New
+						<Dropdown>
+							<DropdownTrigger className="hidden sm:flex">
+								<Button endContent={<Icon icon="mdi:chevron-down" className="text-small" />} variant="flat">
+									Status
+								</Button>
+							</DropdownTrigger>
+							<DropdownMenu
+								disallowEmptySelection
+								aria-label="Table Columns"
+								closeOnSelect={false}
+								selectedKeys={statusFilter}
+								selectionMode="multiple"
+								onSelectionChange={setStatusFilter}
+							>
+								{statusOptions.map((status) => (
+									<DropdownItem key={status.uid} className="capitalize">
+										{status.name}
+									</DropdownItem>
+								))}
+							</DropdownMenu>
+						</Dropdown>
+						<Dropdown>
+							<DropdownTrigger className="hidden sm:flex">
+								<Button endContent={<Icon icon="mdi:chevron-down" className="text-small" />} variant="flat">
+									Colonne
+								</Button>
+							</DropdownTrigger>
+							<DropdownMenu
+								disallowEmptySelection
+								aria-label="Table Columns"
+								closeOnSelect={false}
+								selectedKeys={visibleColumns}
+								selectionMode="multiple"
+								onSelectionChange={setVisibleColumns}
+							>
+								{columns.map((column) => (
+									<DropdownItem key={column.uid} className="capitalize">
+										{column.name}
+									</DropdownItem>
+								))}
+							</DropdownMenu>
+						</Dropdown>
+						<Button disabled color="primary" endContent={<Icon icon="mdi:plus" />}>
+							Crea nuovo
 						</Button>
 					</div>
 				</div>
@@ -272,7 +314,7 @@ export default function ProductsPage() {
 					</TableColumn>
 				)}
 			</TableHeader>
-			<TableBody emptyContent={"Nessun prodotto trovato"} items={sortedItems}>
+			<TableBody isLoading={isLoading} emptyContent={"Nessun prodotto trovato"} items={sortedItems}>
 				{(item) => (
 					<TableRow key={item.id}>
 						{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}

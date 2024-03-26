@@ -15,10 +15,11 @@ export const columns = [
     { name: "Nome", uid: "name", sortable: true },
     { name: "Status", uid: "status", sortable: true },
     { name: "Fornitore", uid: "supplier", sortable: true },
+    { name: "Azioni", uid: "actions"},
 ]
 
 export const statusOptions = [
-    { name: "Attivo", uid: "active" },
-    { name: "Inattivo", uid: "disabled" },
+    { name: "Attivo", uid: 1 },
+    { name: "Inattivo", uid: 0 },
 ]
 

@@ -22,7 +22,8 @@ export type Product = {
   presta_id: number;
   supplier_id: number;
   parent_id: number;
-  languages: ProductLanguage[]
+  languages: ProductLanguage[],
+  supplier: Supplier
 }
 
 export type ProductLanguage = {
@@ -35,4 +36,10 @@ export type ProductLanguage = {
     name: string;
     short_description: string;
   }
+}
+
+export type Supplier = {
+  id: number;
+  active: number;
+  name: string;
 }
