@@ -11,50 +11,53 @@ import { ProductsCard } from "./ProductsCard";
 
 export default function Home() {
 	return (
-		<>		
-		<section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-			<SuppliersCard totalSuppliers={5}/>
-			<ProductsCard totalProducts={200} totalCombinations={500}/>
-		</section>
-		<section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
-			<div className="inline-block max-w-lg text-center justify-center">
-				<h1 className={title()}>Make&nbsp;</h1>
-				<h1 className={title({ color: "violet" })}>beautiful&nbsp;</h1>
-				<br />
-				<h1 className={title()}>
-					websites regardless of your design experience.
-				</h1>
-				<h2 className={subtitle({ class: "mt-4" })}>
-					Beautiful, fast and modern React UI library.
-				</h2>
+		<>
+			<div className="p-6 text-center">
+				<h1 className={title()}>Dashboard</h1>
 			</div>
+			<section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+				<SuppliersCard totalSuppliers={5} />
+				<ProductsCard totalProducts={200} totalCombinations={500} />
+			</section>
+			<section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
+				<div className="inline-block max-w-lg text-center justify-center">
+					<h1 className={title()}>Make&nbsp;</h1>
+					<h1 className={title({ color: "violet" })}>beautiful&nbsp;</h1>
+					<br />
+					<h1 className={title()}>
+						websites regardless of your design experience.
+					</h1>
+					<h2 className={subtitle({ class: "mt-4" })}>
+						Beautiful, fast and modern React UI library.
+					</h2>
+				</div>
 
-			<div className="flex gap-3">
-				<Link
-					isExternal
-					href={siteConfig.links.docs}
-					className={buttonStyles({ color: "primary", radius: "full", variant: "shadow" })}
-				>
-					Documentation
-				</Link>
-				<Link
-					isExternal
-					className={buttonStyles({ variant: "bordered", radius: "full" })}
-					href={siteConfig.links.github}
-				>
-					<GithubIcon size={20} />
-					GitHub
-				</Link>
-			</div>
+				<div className="flex gap-3">
+					<Link
+						isExternal
+						href={siteConfig.links.docs}
+						className={buttonStyles({ color: "primary", radius: "full", variant: "shadow" })}
+					>
+						Documentation
+					</Link>
+					<Link
+						isExternal
+						className={buttonStyles({ variant: "bordered", radius: "full" })}
+						href={siteConfig.links.github}
+					>
+						<GithubIcon size={20} />
+						GitHub
+					</Link>
+				</div>
 
-			<div className="mt-8">
-				<Snippet hideSymbol hideCopyButton variant="flat">
-					<span>
-						Get started by editing <Code color="primary">app/page.tsx</Code>
-					</span>
-				</Snippet>
-			</div>
-		</section>
+				<div className="mt-8">
+					<Snippet hideSymbol hideCopyButton variant="flat">
+						<span>
+							Get started by editing <Code color="primary">app/page.tsx</Code>
+						</span>
+					</Snippet>
+				</div>
+			</section>
 		</>
 	);
 }

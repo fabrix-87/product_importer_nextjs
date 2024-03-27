@@ -17,6 +17,8 @@ import { useProducts } from "@/hooks/products";
 import { Chip, ChipProps } from "@nextui-org/chip";
 import { Pagination } from "@nextui-org/pagination";
 import { Product } from "@/types";
+import Loading from "@/components/Loading";
+import { title } from "@/components/primitives";
 
 const statusColorMap: Record<string, ChipProps["color"]> = {
 	1: "success",
@@ -26,42 +28,31 @@ const statusColorMap: Record<string, ChipProps["color"]> = {
 const INITIAL_VISIBLE_COLUMNS = ["id", "reference", "name", "status", "supplier", "actions"];
 
 export default function ProductsPage() {
-	const [isLoading, setIsLoading] = useState(true)
-	const { getProducts } = useProducts()
-	const [products, setProducts] = useState<Product[]>([])
-
 	const [filterValue, setFilterValue] = useState("");
+	const [page, setPage] = useState(1);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
+
+	const { products, isLoading, totalPages, totalProducts } = useProducts({
+		search: filterValue,
+		page,
+		limit: rowsPerPage
+	})
+
 	const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
 	const [visibleColumns, setVisibleColumns] = useState<Selection>(new Set(INITIAL_VISIBLE_COLUMNS));
 	const [statusFilter, setStatusFilter] = useState<Selection>("all");
-	const [rowsPerPage, setRowsPerPage] = useState(25);
 	const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
 		column: "id",
 		direction: "ascending",
 	});
-
-	const [page, setPage] = useState(1);
-
-	const hasSearchFilter = Boolean(filterValue);
-
-	useEffect(() => {
-		const fetchProducts = async () => {
-			const products = await getProducts()
-			setProducts(products)
-			setIsLoading(false)
-		}
-		fetchProducts()
-	}, [])
-
-	useEffect(() => {
-		console.log(statusFilter)
-	}, [statusFilter])
 
 	const headerColumns = useMemo(() => {
 		if (visibleColumns === "all") return columns;
 
 		return columns.filter((column) => Array.from(visibleColumns).includes(column.uid));
 	}, [visibleColumns]);
+
+	/*
 
 	const filteredItems = useMemo(() => {
 		let filteredProducts = [...products];
@@ -79,8 +70,6 @@ export default function ProductsPage() {
 		return filteredProducts;
 	}, [products, filterValue, statusFilter]);
 
-	const pages = Math.ceil(filteredItems.length / rowsPerPage);
-
 	const items = useMemo(() => {
 		const start = (page - 1) * rowsPerPage;
 		const end = start + rowsPerPage;
@@ -97,9 +86,17 @@ export default function ProductsPage() {
 		});
 	}, [sortDescriptor, items]);
 
+	*/
+
 	const renderCell = useCallback((product: Product, columnKey: React.Key) => {
 		const cellValue = product[columnKey as keyof Product];
 		switch (columnKey) {
+			case "id":
+				return (
+					<div>
+						{product.id}
+					</div>
+				);
 			case "reference":
 				return (
 					<div>
@@ -118,6 +115,12 @@ export default function ProductsPage() {
 						{product.active == 1 ? 'Attivo' : 'Disattivato'}
 					</Chip>
 				);
+			case "supplier":
+				return (
+					<div className="flex flex-col">
+						{product.supplier.name}
+					</div>
+				);
 			case "actions":
 				return (
 					<div className="relative flex justify-end items-center gap-2">
@@ -135,16 +138,15 @@ export default function ProductsPage() {
 						</Dropdown>
 					</div>
 				);
-			default:
-				return cellValue;
+
 		}
 	}, []);
 
 	const onNextPage = useCallback(() => {
-		if (page < pages) {
+		if (page < totalPages) {
 			setPage(page + 1);
 		}
-	}, [page, pages]);
+	}, [page, totalPages]);
 
 	const onPreviousPage = useCallback(() => {
 		if (page > 1) {
@@ -234,7 +236,7 @@ export default function ProductsPage() {
 				</div>
 				<div className="flex justify-between items-center">
 					<span className="text-default-400 text-small">
-						Ci sono {products.length} prodotti
+						Ci sono {totalProducts} prodotti
 					</span>
 					<label className="flex items-center text-default-400 text-small">
 						Elementi per pagina:
@@ -242,6 +244,7 @@ export default function ProductsPage() {
 							className="bg-transparent outline-none text-default-400 text-small"
 							onChange={onRowsPerPageChange}
 						>
+							<option value="10">10</option>
 							<option value="25">25</option>
 							<option value="50">50</option>
 							<option value="100">100</option>
@@ -250,7 +253,7 @@ export default function ProductsPage() {
 				</div>
 			</div>
 		);
-	}, [filterValue, onSearchChange, products.length, onRowsPerPageChange, onClear]);
+	}, [filterValue, onSearchChange, totalProducts, onRowsPerPageChange, onClear]);
 
 	const bottomContent = useMemo(() => {
 		return (
@@ -261,66 +264,75 @@ export default function ProductsPage() {
 					showShadow
 					color="primary"
 					page={page}
-					total={pages}
+					total={totalPages}
 					onChange={setPage}
 				/>
 				<div className="hidden sm:flex w-[30%] justify-end gap-2">
 					<Button
-						isDisabled={pages === 1}
+						isDisabled={totalPages === 1}
 						size="sm"
 						variant="flat"
 						onPress={onPreviousPage}
 					>
-						Previous
+						Precedente
 					</Button>
 					<Button
-						isDisabled={pages === 1}
+						isDisabled={totalPages === 1}
 						size="sm"
 						variant="flat"
 						onPress={onNextPage}
 					>
-						Next
+						Successivo
 					</Button>
 				</div>
 			</div>
 		);
-	}, [page, pages, onPreviousPage, onNextPage]);
+	}, [page, totalPages, onPreviousPage, onNextPage]);
 
 	return (
-		<Table
-			aria-label="Example table with custom cells, pagination and sorting"
-			isHeaderSticky
-			bottomContent={bottomContent}
-			bottomContentPlacement="outside"
-			classNames={{
-				wrapper: "max-h-[382px]",
-			}}
-			selectedKeys={selectedKeys}
-			selectionMode="multiple"
-			sortDescriptor={sortDescriptor}
-			topContent={topContent}
-			topContentPlacement="outside"
-			onSelectionChange={setSelectedKeys}
-			onSortChange={setSortDescriptor}
-		>
-			<TableHeader columns={headerColumns}>
-				{(column) => (
-					<TableColumn
-						key={column.uid}
-						align={column.uid === "actions" ? "center" : "start"}
-						allowsSorting={column.sortable}
-					>
-						{column.name}
-					</TableColumn>
-				)}
-			</TableHeader>
-			<TableBody isLoading={isLoading} emptyContent={"Nessun prodotto trovato"} items={sortedItems}>
-				{(item) => (
-					<TableRow key={item.id}>
-						{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
-					</TableRow>
-				)}
-			</TableBody>
-		</Table>
+		<>
+			<div className="p-4">
+				<h1 className={title()}>Prodotti</h1>
+			</div>
+			<Table
+				aria-label="Example table with custom cells, pagination and sorting"
+				isHeaderSticky
+				bottomContent={bottomContent}
+				bottomContentPlacement="outside"
+				classNames={{
+					wrapper: "min-h-[300px]",
+				}}
+				isStriped
+				sortDescriptor={sortDescriptor}
+				topContent={topContent}
+				topContentPlacement="outside"
+				onSelectionChange={setSelectedKeys}
+				onSortChange={setSortDescriptor}
+			>
+				<TableHeader columns={headerColumns}>
+					{(column) => (
+						<TableColumn
+							key={column.uid}
+							align={"center"}
+							allowsSorting={column.sortable}
+						>
+							{column.name}
+						</TableColumn>
+					)}
+				</TableHeader>
+				<TableBody
+					isLoading={isLoading}
+					loadingContent={<Loading />}
+					emptyContent={"Nessun prodotto trovato"}
+					items={products}
+				>
+					{(item) => (
+						<TableRow key={item.id}>
+							{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+						</TableRow>
+					)}
+				</TableBody>
+			</Table>
+		</>
 	);
 }

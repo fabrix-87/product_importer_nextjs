@@ -15,6 +15,16 @@ export interface ErrorData {
   message: string;
 }
 
+export interface ApiResponse<T>{
+  data: T|null;
+  success: boolean;
+  message?: string;
+}
+
+export interface ApiError {
+  error: string;
+}
+
 export type Product = {
   id: number;
   reference: string;
