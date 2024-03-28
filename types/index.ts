@@ -53,3 +53,19 @@ export type Supplier = {
   active: number;
   name: string;
 }
+
+export type Category = {
+  id: number;
+  category_id: string;
+  name: string;
+  parent: Category|null;
+  supplier: Supplier;
+  presta_categories: number[];
+}
+
+export type PrestaCategory = {
+  id: number;
+  presta_id: number;
+  name: string;
+  parent_id: number;
+}
