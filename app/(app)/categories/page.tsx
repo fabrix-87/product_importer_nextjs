@@ -82,7 +82,7 @@ export default function CategoryPage() {
 						{category.parent?.name}
 					</div>
 				);
-			case "actions":
+			case "prestaCategories":
 				return (
 					<div className="relative flex justify-end items-center gap-2">
 						<Dropdown>
