@@ -14,7 +14,8 @@ export const columns = [
     { name: "Nome", uid: "name", sortable: true },
     { name: "Fornitore", uid: "supplier", sortable: true },
     { name: "Sottocategoria di", uid: "parent"},
-    { name: "Categoria assegnata", uid: "prestaCategories"},
+    { name: "Categoria assegnata", uid: "presta_categories"},
+    { name: "", uid: "actions"},
 ]
 
 export const statusOptions = [

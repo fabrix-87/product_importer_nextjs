@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
 import React, { ChangeEvent, useCallback, useMemo, useState } from "react";
 
-import { Icon } from '@iconify/react';
+import { Icon } from "@iconify/react";
 import { columns, statusOptions } from "./data";
 import { Input } from "@nextui-org/input";
 import {
@@ -12,7 +12,16 @@ import {
 	DropdownTrigger,
 } from "@nextui-org/dropdown";
 import { Button } from "@nextui-org/button";
-import { Selection, SortDescriptor, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/table";
+import {
+	Selection,
+	SortDescriptor,
+	Table,
+	TableBody,
+	TableCell,
+	TableColumn,
+	TableHeader,
+	TableRow,
+} from "@nextui-org/table";
 import { Chip, ChipProps } from "@nextui-org/chip";
 import { Pagination } from "@nextui-org/pagination";
 import { Category } from "@/types";
@@ -20,29 +29,57 @@ import Loading from "@/components/Loading";
 import { title } from "@/components/primitives";
 import { useCategories } from "@/hooks/categories";
 import { usePrestaCategories } from "@/hooks/prestaCategories";
+import CategoryModal from "./modal";
 
 const statusColorMap: Record<string, ChipProps["color"]> = {
 	1: "success",
 	0: "danger",
-}
+};
 
-const INITIAL_VISIBLE_COLUMNS = ["id", "name", "supplier", "parent", "prestaCategories"];
+const INITIAL_VISIBLE_COLUMNS = [
+	"id",
+	"name",
+	"supplier",
+	"parent",
+	"presta_categories",
+	"actions"
+];
 
 export default function CategoryPage() {
 	const [filterValue, setFilterValue] = useState("");
 	const [page, setPage] = useState(1);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 
-	const { categories, isLoading, totalPages, totalProducts } = useCategories({
+	const [isModalOpened, setIsModalOpened] = useState(false)
+	const [modalTitle, setModalTitle] = useState('')
+	const [modalCategory, setModalCategory] = useState<Category>({})
+
+	const { categories, isLoading, totalPages, totalCategories } = useCategories({
 		search: filterValue,
 		page,
-		limit: rowsPerPage
-	})
+		limit: rowsPerPage,
+	});
 
-	const { prestaCategories, isLoading: isPrestaLoading, error: prestaError } = usePrestaCategories()
+	const {
+		prestaCategories,
+		isLoading: isPrestaLoading,
+		error: prestaError,
+	} = usePrestaCategories();
+
+	const handleOpenModal = (category: Category) => {
+		setModalTitle('Modifica la categoria: ' + category.name)
+		setModalCategory(category)
+		setIsModalOpened(true)
+	};
+
+	const handleCloseModal = () => {
+		setIsModalOpened(false)
+	}
 
 	const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
-	const [visibleColumns, setVisibleColumns] = useState<Selection>(new Set(INITIAL_VISIBLE_COLUMNS));
+	const [visibleColumns, setVisibleColumns] = useState<Selection>(
+		new Set(INITIAL_VISIBLE_COLUMNS)
+	);
 	const [statusFilter, setStatusFilter] = useState<Selection>("all");
 	const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
 		column: "id",
@@ -52,54 +89,42 @@ export default function CategoryPage() {
 	const headerColumns = useMemo(() => {
 		if (visibleColumns === "all") return columns;
 
-		return columns.filter((column) => Array.from(visibleColumns).includes(column.uid));
+		return columns.filter((column) =>
+			Array.from(visibleColumns).includes(column.uid)
+		);
 	}, [visibleColumns]);
 
 	const renderCell = useCallback((category: Category, columnKey: React.Key) => {
-		const cellValue = category[columnKey as keyof Category];
 		switch (columnKey) {
 			case "id":
-				return (
-					<div>
-						{category.id}
-					</div>
-				);
+				return <div>{category.id}</div>;
 			case "name":
-				return (
-					<div className="flex flex-col">
-						{category.name}
-					</div>
-				);
+				return <div className="flex flex-col">{category.name}</div>;
 			case "supplier":
-				return (
-					<div className="flex flex-col">
-						{category.supplier.name}
-					</div>
-				);
+				return <div className="flex flex-col">{category.supplier?.name}</div>;
 			case "parent":
+				return <div className="flex flex-col">{category.parent?.name}</div>;
+			case "presta_categories":
+				return (
+					<div className="flex items-center gap-2">
+						{category.presta_categories?.map((prestaCategory, index) => (
+							<Chip
+								key={index}
+								variant="flat"
+							>
+								{prestaCategory.name}
+							</Chip>
+						))}
+					</div>
+				);
+			case "actions":
 				return (
 					<div className="flex flex-col">
-						{category.parent?.name}
+						<Button onPress={() => handleOpenModal(category)} isIconOnly>
+							<Icon icon="mdi:add-circle" />
+						</Button>
 					</div>
 				);
-			case "prestaCategories":
-				return (
-					<div className="relative flex justify-end items-center gap-2">
-						<Dropdown>
-							<DropdownTrigger>
-								<Button aria-label="Azioni" isIconOnly size="sm" variant="light">
-									<Icon icon="mdi:dots-vertical" aria-label="Azioni" />
-								</Button>
-							</DropdownTrigger>
-							<DropdownMenu>
-								<DropdownItem aria-label="Dettagli">Dettagli</DropdownItem>
-								<DropdownItem aria-label="Modifica">Modifica</DropdownItem>
-								<DropdownItem aria-label="Elimina">Elimina</DropdownItem>
-							</DropdownMenu>
-						</Dropdown>
-					</div>
-				);
-
 		}
 	}, []);
 
@@ -115,17 +140,20 @@ export default function CategoryPage() {
 		}
 	}, [page]);
 
-	const onRowsPerPageChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
-		setRowsPerPage(Number(e.target.value));
-		setPage(1);
-	}, []);
+	const onRowsPerPageChange = useCallback(
+		(e: ChangeEvent<HTMLSelectElement>) => {
+			setRowsPerPage(Number(e.target.value));
+			setPage(1);
+		},
+		[]
+	);
 
 	const onSearchChange = useCallback((value: string) => {
 		if (value) {
 			setFilterValue(value);
 			setPage(1);
 		} else {
-			setFilterValue('');
+			setFilterValue("");
 		}
 	}, []);
 
@@ -137,6 +165,7 @@ export default function CategoryPage() {
 	const topContent = useMemo(() => {
 		return (
 			<div className="flex flex-col gap-4">
+
 				<div className="flex justify-between gap-3 items-end">
 					<Input
 						isClearable
@@ -150,7 +179,12 @@ export default function CategoryPage() {
 					<div className="flex gap-3">
 						<Dropdown>
 							<DropdownTrigger className="hidden sm:flex">
-								<Button endContent={<Icon icon="mdi:chevron-down" className="text-small" />} variant="flat">
+								<Button
+									endContent={
+										<Icon icon="mdi:chevron-down" className="text-small" />
+									}
+									variant="flat"
+								>
 									Status
 								</Button>
 							</DropdownTrigger>
@@ -171,7 +205,12 @@ export default function CategoryPage() {
 						</Dropdown>
 						<Dropdown>
 							<DropdownTrigger className="hidden sm:flex">
-								<Button endContent={<Icon icon="mdi:chevron-down" className="text-small" />} variant="flat">
+								<Button
+									endContent={
+										<Icon icon="mdi:chevron-down" className="text-small" />
+									}
+									variant="flat"
+								>
 									Colonne
 								</Button>
 							</DropdownTrigger>
@@ -190,14 +229,11 @@ export default function CategoryPage() {
 								))}
 							</DropdownMenu>
 						</Dropdown>
-						<Button disabled color="primary" endContent={<Icon icon="mdi:plus" />}>
-							Crea nuovo
-						</Button>
 					</div>
 				</div>
 				<div className="flex justify-between items-center">
 					<span className="text-default-400 text-small">
-						Ci sono {totalProducts} prodotti
+						Ci sono {totalCategories} categorie
 					</span>
 					<label className="flex items-center text-default-400 text-small">
 						Elementi per pagina:
@@ -214,7 +250,13 @@ export default function CategoryPage() {
 				</div>
 			</div>
 		);
-	}, [filterValue, onSearchChange, totalProducts, onRowsPerPageChange, onClear]);
+	}, [
+		filterValue,
+		onSearchChange,
+		totalCategories,
+		onRowsPerPageChange,
+		onClear,
+	]);
 
 	const bottomContent = useMemo(() => {
 		return (
@@ -255,8 +297,15 @@ export default function CategoryPage() {
 			<div className="p-4">
 				<h1 className={title()}>Categorie Fornitori</h1>
 			</div>
+			<CategoryModal
+				isVisible={isModalOpened}
+				title={modalTitle}
+				category={modalCategory}
+				prestaCategories={prestaCategories}
+				onClose={handleCloseModal}
+			/>
 			<Table
-				aria-label="Example table with custom cells, pagination and sorting"
+				aria-label="Tabella categorie"
 				isHeaderSticky
 				bottomContent={bottomContent}
 				bottomContentPlacement="outside"
@@ -284,12 +333,14 @@ export default function CategoryPage() {
 				<TableBody
 					isLoading={isLoading}
 					loadingContent={<Loading />}
-					emptyContent={"Nessun prodotto trovato"}
+					emptyContent={"Nessuna categoria trovata"}
 					items={categories}
 				>
 					{(item) => (
 						<TableRow key={item.id}>
-							{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+							{(columnKey) => (
+								<TableCell>{renderCell(item, columnKey)}</TableCell>
+							)}
 						</TableRow>
 					)}
 				</TableBody>
