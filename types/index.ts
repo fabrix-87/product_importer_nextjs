@@ -1,4 +1,4 @@
-import { SVGProps } from "react";
+import { Key, SVGProps } from "react";
 
 export type IconSvgProps = SVGProps<SVGSVGElement> & {
   size?: number;
@@ -50,7 +50,6 @@ export type ProductLanguage = {
 
 export type Supplier = {
   id: number;
-  active: number;
   name: string;
 }
 
@@ -71,4 +70,9 @@ export type PrestaCategory = {
   active?: number;
   fullName?: string;
   childrens?: PrestaCategory[]
+}
+
+export type filterType = {
+  field: string,
+  value: string|string[]|Key[]
 }

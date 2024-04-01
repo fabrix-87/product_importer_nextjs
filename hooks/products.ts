@@ -1,6 +1,6 @@
 'use client'
 
-import axios from "@/lib/axios"
+import { filterType } from "@/app/(app)/categories/data"
 import { getAllProducts } from "@/lib/product-api"
 import { Product } from "@/types"
 import { useEffect, useState } from "react"
@@ -8,7 +8,8 @@ import { useEffect, useState } from "react"
 export const useProducts = (params: {
     search?: string,
     page?: number,
-    limit?: number
+    limit?: number,
+    filters?: filterType[]
 }) => {
 
     const [products, setProducts] = useState<Product[]>([])
@@ -31,7 +32,7 @@ export const useProducts = (params: {
                     setIsLoading(false)
                 }
             })
-    }, [params.search, params.page, params.limit])
+    }, [params.search, params.page, params.limit, params.filters])
 
     
     return {

@@ -1,16 +1,11 @@
 "use client";
 
-import React, { ChangeEvent, useCallback, useMemo, useState } from "react";
+import React, { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import { Icon } from "@iconify/react";
-import { columns, statusOptions } from "./data";
+import { columns, toBeAssignedValues } from "./data";
 import { Input } from "@nextui-org/input";
-import {
-	Dropdown,
-	DropdownItem,
-	DropdownMenu,
-	DropdownTrigger,
-} from "@nextui-org/dropdown";
+
 import { Button } from "@nextui-org/button";
 import {
 	Selection,
@@ -22,19 +17,16 @@ import {
 	TableHeader,
 	TableRow,
 } from "@nextui-org/table";
-import { Chip, ChipProps } from "@nextui-org/chip";
+import { Chip } from "@nextui-org/chip";
 import { Pagination } from "@nextui-org/pagination";
-import { Category } from "@/types";
+import { Category, filterType } from "@/types";
 import Loading from "@/components/Loading";
 import { title } from "@/components/primitives";
 import { useCategories } from "@/hooks/categories";
 import { usePrestaCategories } from "@/hooks/prestaCategories";
 import CategoryModal from "./modal";
-
-const statusColorMap: Record<string, ChipProps["color"]> = {
-	1: "success",
-	0: "danger",
-};
+import { useSuppliers } from "@/hooks/suppliers";
+import { DropdownFilter } from "@/components/DropdownFilter";
 
 const INITIAL_VISIBLE_COLUMNS = [
 	"id",
@@ -48,23 +40,26 @@ const INITIAL_VISIBLE_COLUMNS = [
 export default function CategoryPage() {
 	const [filterValue, setFilterValue] = useState("");
 	const [page, setPage] = useState(1);
+	const [filters, setFilters] = useState<filterType[]>([])
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 
 	const [isModalOpened, setIsModalOpened] = useState(false)
 	const [modalTitle, setModalTitle] = useState('')
 	const [modalCategory, setModalCategory] = useState<Category>({})
 
-	const { categories, isLoading, totalPages, totalCategories } = useCategories({
+	const [supplierFilter, setSupplierFilter] = useState<Selection>("all")
+	const [hasCategoryFilter, setHasCategoryFilter] = useState<Selection>("all")
+
+	const { categories, isLoading, totalPages, totalCategories, syncCategories, setRefresh } = useCategories({
 		search: filterValue,
 		page,
 		limit: rowsPerPage,
+		filters
 	});
 
-	const {
-		prestaCategories,
-		isLoading: isPrestaLoading,
-		error: prestaError,
-	} = usePrestaCategories();
+	const { prestaCategories } = usePrestaCategories();
+	const { suppliers } = useSuppliers()
+
 
 	const handleOpenModal = (category: Category) => {
 		setModalTitle('Modifica la categoria: ' + category.name)
@@ -76,21 +71,62 @@ export default function CategoryPage() {
 		setIsModalOpened(false)
 	}
 
+	const handleSubmitModal = (selectedData: Selection|undefined) => {
+		if(modalCategory.id !== undefined && selectedData !== undefined){
+			syncCategories(modalCategory.id, Array.from(selectedData, (elem) => parseInt(elem.toString())))
+			setRefresh(true)
+		}
+		
+	}
+
 	const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
 	const [visibleColumns, setVisibleColumns] = useState<Selection>(
 		new Set(INITIAL_VISIBLE_COLUMNS)
 	);
-	const [statusFilter, setStatusFilter] = useState<Selection>("all");
-	const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
+	const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
 		column: "id",
 		direction: "ascending",
 	});
+
+	useEffect(() => {
+		const updateFilters = (filterData: filterType[]) => {
+			setFilters((currentFilters) => {
+				const updatedFilters = currentFilters.slice(); // Create a copy to avoid mutation
+
+				filterData.forEach((newFilter) => {
+					const existingFilterIndex = updatedFilters.findIndex(
+						(filter) => filter.field === newFilter.field
+					)
+
+					if (existingFilterIndex !== -1) {
+						// Update existing filter
+						if (newFilter.value.length > 0)
+							updatedFilters[existingFilterIndex].value = newFilter.value;
+						else
+							delete updatedFilters[existingFilterIndex]
+					} else if (newFilter.value.length > 0) {
+						// Add new filter
+						updatedFilters.push(newFilter);
+					}
+				});
+
+				return updatedFilters;
+			})
+		}
+
+		// Esegui l'aggiornamento quando supplierFilter cambia
+		updateFilters([
+			{ field: 'supplier', value: supplierFilter == 'all' ? [] : Array.from(supplierFilter) },
+			{ field: 'hasCategory', value: hasCategoryFilter == 'all' ? [] : Array.from(hasCategoryFilter) }
+		])
+
+	}, [supplierFilter, hasCategoryFilter])
 
 	const headerColumns = useMemo(() => {
 		if (visibleColumns === "all") return columns;
 
 		return columns.filter((column) =>
-			Array.from(visibleColumns).includes(column.uid)
+			Array.from(visibleColumns).includes(column.id)
 		);
 	}, [visibleColumns]);
 
@@ -162,6 +198,12 @@ export default function CategoryPage() {
 		setPage(1);
 	}, []);
 
+	const resetFilters = () => {
+		setFilters([])
+		setHasCategoryFilter('all')
+		setSupplierFilter('all')
+	}
+
 	const topContent = useMemo(() => {
 		return (
 			<div className="flex flex-col gap-4">
@@ -177,63 +219,33 @@ export default function CategoryPage() {
 						onValueChange={onSearchChange}
 					/>
 					<div className="flex gap-3">
-						<Dropdown>
-							<DropdownTrigger className="hidden sm:flex">
-								<Button
-									endContent={
-										<Icon icon="mdi:chevron-down" className="text-small" />
-									}
-									variant="flat"
+						<DropdownFilter
+							text="Filtro fornitori"
+							options={suppliers}
+							onSelectionChange={setSupplierFilter}
+							selectedKeys={supplierFilter}
+						/>
+						<DropdownFilter
+							text="Da assegnare?"
+							options={toBeAssignedValues}
+							onSelectionChange={setHasCategoryFilter}
+							selectedKeys={hasCategoryFilter}
+						/>
+						{filters.length > 0 && (
+							<Button 
+								onPress={() => resetFilters()} 
+								isIconOnly 
+								title="Resetta filtri"
+								color="danger"
 								>
-									Status
-								</Button>
-							</DropdownTrigger>
-							<DropdownMenu
-								disallowEmptySelection
-								aria-label="Table Columns"
-								closeOnSelect={false}
-								selectedKeys={statusFilter}
-								selectionMode="multiple"
-								onSelectionChange={setStatusFilter}
-							>
-								{statusOptions.map((status) => (
-									<DropdownItem key={status.uid} className="capitalize">
-										{status.name}
-									</DropdownItem>
-								))}
-							</DropdownMenu>
-						</Dropdown>
-						<Dropdown>
-							<DropdownTrigger className="hidden sm:flex">
-								<Button
-									endContent={
-										<Icon icon="mdi:chevron-down" className="text-small" />
-									}
-									variant="flat"
-								>
-									Colonne
-								</Button>
-							</DropdownTrigger>
-							<DropdownMenu
-								disallowEmptySelection
-								aria-label="Table Columns"
-								closeOnSelect={false}
-								selectedKeys={visibleColumns}
-								selectionMode="multiple"
-								onSelectionChange={setVisibleColumns}
-							>
-								{columns.map((column) => (
-									<DropdownItem key={column.uid} className="capitalize">
-										{column.name}
-									</DropdownItem>
-								))}
-							</DropdownMenu>
-						</Dropdown>
+								<Icon icon="mdi:clear-circle" />
+							</Button>
+						)}
 					</div>
 				</div>
 				<div className="flex justify-between items-center">
 					<span className="text-default-400 text-small">
-						Ci sono {totalCategories} categorie
+						Trovate {totalCategories} categorie
 					</span>
 					<label className="flex items-center text-default-400 text-small">
 						Elementi per pagina:
@@ -253,9 +265,12 @@ export default function CategoryPage() {
 	}, [
 		filterValue,
 		onSearchChange,
+		suppliers,
+		supplierFilter,
+		hasCategoryFilter,
 		totalCategories,
 		onRowsPerPageChange,
-		onClear,
+		onClear
 	]);
 
 	const bottomContent = useMemo(() => {
@@ -303,6 +318,7 @@ export default function CategoryPage() {
 				category={modalCategory}
 				prestaCategories={prestaCategories}
 				onClose={handleCloseModal}
+				onSubmit={handleSubmitModal}
 			/>
 			<Table
 				aria-label="Tabella categorie"
@@ -322,7 +338,7 @@ export default function CategoryPage() {
 				<TableHeader columns={headerColumns}>
 					{(column) => (
 						<TableColumn
-							key={column.uid}
+							key={column.id}
 							align={"center"}
 							allowsSorting={column.sortable}
 						>

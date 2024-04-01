@@ -4,14 +4,14 @@ import { Chip } from "@nextui-org/chip";
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from "@nextui-org/modal";
 import { Select, SelectItem, SelectedItems } from "@nextui-org/select";
 import { Selection } from "@nextui-org/table";
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, Key, useEffect, useState } from "react";
 
 interface CategoryModalProps {
     isVisible: boolean;
     title: string;
     category: Category;
     prestaCategories: PrestaCategory[];
-    onSubmit?: (category: Category) => void; // Optional callback for form submission
+    onSubmit: (selectedData: Selection|undefined) => void; // Optional callback for form submission
     onClose: () => void;
 }
 
@@ -48,7 +48,7 @@ const CategoryModal: FC<CategoryModalProps> = ({
     onSubmit,
     onClose,
 }) => {
-    const { isOpen, onOpen, onOpenChange } = useDisclosure()
+    const { onOpen, onOpenChange } = useDisclosure()
     const [flatData, setFlatData] = useState<PrestaCategory[]>([])
     const [selectedData, setSelectedData] = useState<Selection>()
 
@@ -58,10 +58,21 @@ const CategoryModal: FC<CategoryModalProps> = ({
             setFlatData(flattenCategories(prestaCategories))
             if (category.presta_categories)
                 setSelectedData(getIdsFromCategories(category.presta_categories))
-
-            console.log(selectedData)
         }
     }, [isVisible])
+
+    const handleSubmit = () => {
+        onSubmit(selectedData)
+        onClose()
+    }
+
+    const removeElement = (key: Key|undefined) => {
+        if(selectedData == undefined || selectedData == 'all' || key == undefined)
+            return;
+        const newData = selectedData
+        newData.delete(key)
+        setSelectedData(newData)
+    }
 
     return (
         <>
@@ -69,7 +80,7 @@ const CategoryModal: FC<CategoryModalProps> = ({
                 backdrop="blur"
                 closeButton
                 size="3xl"
-                isOpen={isOpen}
+                isOpen={isVisible}
                 aria-label="Modifica categoria"
                 onClose={onClose}
                 title={title}
@@ -92,6 +103,7 @@ const CategoryModal: FC<CategoryModalProps> = ({
                                     placeholder="Seleziona una categoria"
                                     labelPlacement="outside"
                                     defaultSelectedKeys={selectedData}
+                                    onSelectionChange={setSelectedData}
                                     classNames={{
                                         trigger: "min-h-unit-12 py-2 ",
                                     }}
@@ -99,7 +111,11 @@ const CategoryModal: FC<CategoryModalProps> = ({
                                         return (
                                             <div className="flex flex-wrap gap-2">
                                                 {items.map((item) => (
-                                                    <Chip key={item.key}>{item.data?.name}</Chip>
+                                                    <Chip 
+                                                        key={item.key}
+                                                        onClose={() => removeElement(item.key)}
+                                                        >
+                                                    {item.data?.name}</Chip>
                                                 ))}
                                             </div>
                                         );
@@ -122,7 +138,7 @@ const CategoryModal: FC<CategoryModalProps> = ({
                                 <Button color="danger" variant="light" onPress={onClose}>
                                     Annulla
                                 </Button>
-                                <Button color="primary" onPress={onClose}>
+                                <Button color="primary" onPress={handleSubmit}>
                                     Salva Modifiche
                                 </Button>
                             </ModalFooter>

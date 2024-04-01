@@ -1,4 +1,4 @@
-import { ApiResponse, Category } from "@/types"
+import { ApiResponse, Category, filterType } from "@/types"
 import axios from "./axios"
 
 export type ApiCategoriesData = {
@@ -7,24 +7,19 @@ export type ApiCategoriesData = {
     total: number;
 }
 
-export type ApiFilter = {
-    field: string;
-    value: string|number;
-}
-
 export const getAllCategories = async (params: {
     search?: string;
-    filters?: ApiFilter[]
+    filters?: filterType[]
     page?: number;
     pageSize?: number;
-  }): Promise<ApiResponse<ApiCategoriesData>> => {
-    try{
+}): Promise<ApiResponse<ApiCategoriesData>> => {
+    try {
         const response = await axios.get('api/categories', { params })
         return {
             data: response.data,
             success: true
         }
-    }catch(error : any){
+    } catch (error: any) {
         return {
             data: null,
             success: false,
@@ -33,11 +28,27 @@ export const getAllCategories = async (params: {
     }
 }
 
-export const getCategoryById = async (id: number) : Promise<ApiResponse<Category>> => {
-    try{
-        const response = await axios.get('api/categories/'+id)
+export const getCategoryById = async (id: number): Promise<ApiResponse<Category>> => {
+    try {
+        const response = await axios.get('api/categories/' + id)
         return response.data
-    }catch(error : any){
+    } catch (error: any) {
+        return {
+            data: null,
+            success: false,
+            message: error.message
+        }
+    }
+}
+
+export const syncPrestaCategories = async (
+    id: number,
+    categories: number[]
+): Promise<ApiResponse<Category>> => {
+    try {
+        const response = await axios.patch('api/categories/' + id, { categories })
+        return response.data
+    } catch (error: any) {
         return {
             data: null,
             success: false,

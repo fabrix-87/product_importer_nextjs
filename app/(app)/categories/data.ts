@@ -4,22 +4,17 @@ export interface productColumnsType{
     sortable?: boolean;
 }
 
-export interface statusOptionsType{
-    name: string;
-    uid: string;
-}
-
 export const columns = [
-    { name: "id", uid: "id", sortable: true },
-    { name: "Nome", uid: "name", sortable: true },
-    { name: "Fornitore", uid: "supplier", sortable: true },
-    { name: "Sottocategoria di", uid: "parent"},
-    { name: "Categoria assegnata", uid: "presta_categories"},
-    { name: "", uid: "actions"},
+    { name: "id", id: "id", sortable: true },
+    { name: "Nome", id: "name", sortable: true },
+    { name: "Fornitore", id: "supplier", sortable: true },
+    { name: "Sottocategoria di", id: "parent"},
+    { name: "Categoria assegnata", id: "presta_categories"},
+    { name: "", id: "actions"},
 ]
 
-export const statusOptions = [
-    { name: "Attivo", uid: 1 },
-    { name: "Inattivo", uid: 0 },
+export const toBeAssignedValues = [
+    { name: 'Si', id: 1},
+    { name: 'No', id: 0},
 ]
-
+    
