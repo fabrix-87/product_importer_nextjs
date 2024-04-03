@@ -63,7 +63,7 @@ export default function CategoryPage() {
 
 	const handleOpenModal = (category: Category) => {
 		setModalTitle('Modifica la categoria: ' + category.name)
-		setModalCategory(category)
+		setModalCategory(category)		
 		setIsModalOpened(true)
 	};
 

@@ -1,3 +1,4 @@
+import Loading from "@/components/Loading";
 import { Category, PrestaCategory } from "@/types";
 import { Button } from "@nextui-org/button";
 import { Chip } from "@nextui-org/chip";
@@ -11,7 +12,7 @@ interface CategoryModalProps {
     title: string;
     category: Category;
     prestaCategories: PrestaCategory[];
-    onSubmit: (selectedData: Selection|undefined) => void; // Optional callback for form submission
+    onSubmit: (selectedData: Selection | undefined) => void; // Optional callback for form submission
     onClose: () => void;
 }
 
@@ -48,17 +49,25 @@ const CategoryModal: FC<CategoryModalProps> = ({
     onSubmit,
     onClose,
 }) => {
-    const { onOpen, onOpenChange } = useDisclosure()
     const [flatData, setFlatData] = useState<PrestaCategory[]>([])
     const [selectedData, setSelectedData] = useState<Selection>()
+    const [isLoading, setIsLoading] = useState(false)
+    const [isOpen, setIsOpen] = useState(false)
 
     useEffect(() => {
-        if (isVisible) {
-            onOpen()
-            setFlatData(flattenCategories(prestaCategories))
-            if (category.presta_categories)
-                setSelectedData(getIdsFromCategories(category.presta_categories))
-        }
+        setFlatData(flattenCategories(prestaCategories))
+        setIsLoading(false)
+    }, [prestaCategories])
+
+    useEffect(() => {
+        setIsLoading(true)
+        if (category.presta_categories)
+            setSelectedData(getIdsFromCategories(category.presta_categories))
+        setIsLoading(false)
+    }, [category])
+
+    useEffect(() => {
+        setIsOpen(isVisible)
     }, [isVisible])
 
     const handleSubmit = () => {
@@ -66,8 +75,8 @@ const CategoryModal: FC<CategoryModalProps> = ({
         onClose()
     }
 
-    const removeElement = (key: Key|undefined) => {
-        if(selectedData == undefined || selectedData == 'all' || key == undefined)
+    const removeElement = (key: Key | undefined) => {
+        if (selectedData == undefined || selectedData == 'all' || key == undefined)
             return;
         const newData = selectedData
         newData.delete(key)
@@ -80,12 +89,11 @@ const CategoryModal: FC<CategoryModalProps> = ({
                 backdrop="blur"
                 closeButton
                 size="3xl"
-                isOpen={isVisible}
+                isOpen={isOpen}
                 aria-label="Modifica categoria"
                 onClose={onClose}
                 title={title}
                 isDismissable={false}
-                onOpenChange={onOpenChange}
             >
                 <ModalContent>
                     {(onClose) => (
@@ -104,6 +112,7 @@ const CategoryModal: FC<CategoryModalProps> = ({
                                     labelPlacement="outside"
                                     defaultSelectedKeys={selectedData}
                                     onSelectionChange={setSelectedData}
+                                    isLoading={isLoading}
                                     classNames={{
                                         trigger: "min-h-unit-12 py-2 ",
                                     }}
@@ -111,11 +120,11 @@ const CategoryModal: FC<CategoryModalProps> = ({
                                         return (
                                             <div className="flex flex-wrap gap-2">
                                                 {items.map((item) => (
-                                                    <Chip 
+                                                    <Chip
                                                         key={item.key}
                                                         onClose={() => removeElement(item.key)}
-                                                        >
-                                                    {item.data?.name}</Chip>
+                                                    >
+                                                        {item.data?.name}</Chip>
                                                 ))}
                                             </div>
                                         );
@@ -146,6 +155,7 @@ const CategoryModal: FC<CategoryModalProps> = ({
                     )}
                 </ModalContent>
             </Modal>
+
         </>
     );
 };
