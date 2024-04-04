@@ -25,7 +25,7 @@ export const useAuth = (
             }),
     )
 
-    const csrf = () => axios.get('/sanctum/csrf-cookie')
+    const csrf = () => axios.get('/sanctum/csrf-cookie').then( (response) => response)
 
     const login = async (
         email: string, 
@@ -39,7 +39,7 @@ export const useAuth = (
         setErrors(null)
 
         axios
-            .post('/login', {email: email, password: password})
+            .post('/login', {email, password, remember})
             .then(() => {
                 mutate()
                 isLoading(false)
@@ -65,7 +65,8 @@ export const useAuth = (
     useEffect(() => {
         if (middleware === 'guest' && redirectIfAuthenticated && isAuthenticated)
             router.push(redirectIfAuthenticated)
-        if (middleware === 'auth' && error) logout()
+        if (middleware === 'auth' && error) 
+            logout()
         //router.push(redirectIfAuthenticated)
     }, [user, error])
 

@@ -50,6 +50,7 @@
     "typescript": "5.0.4"
   },
   "devDependencies": {
-    "@iconify/react": "^4.1.1"
+    "@iconify/react": "^4.1.1",
+    "@svgr/webpack": "^8.1.0"
   }
 }

@@ -1,6 +1,6 @@
 import {Spinner} from "@nextui-org/spinner";
 
-const Loading = () => {
+const LoadingComponent = () => {
     return (
         <>
             <div className="flex min-h-screen w-full items-center justify-center">
@@ -10,4 +10,4 @@ const Loading = () => {
     )
 }
 
-export default Loading
+export default LoadingComponent

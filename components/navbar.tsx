@@ -1,3 +1,5 @@
+"use client"
+
 import {
 	Navbar as NextUINavbar,
 	NavbarContent,
@@ -21,19 +23,27 @@ import {
 	LogoutIcon
 } from "@/components/icons";
 
-import { Logo } from "@/components/icons";
+import Logo from '@/public/ideogramma_ellevu.svg'
 import { useAuth } from "@/hooks/auth";
+import { useState } from "react";
 
 export const Navbar = () => {
 
-	const { user, logout } = useAuth({ middleware: 'auth' }) 
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+	const { user, logout } = useAuth({ middleware: 'auth' })
 
 	return (
-		<NextUINavbar maxWidth="xl" position="sticky">
+		<NextUINavbar
+			maxWidth="xl"
+			position="sticky"
+			isMenuOpen={isMenuOpen}
+			onMenuOpenChange={setIsMenuOpen}
+		>
 			<NavbarContent className="basis-1/5 sm:basis-full" justify="start">
 				<NavbarBrand as="li" className="gap-3 max-w-fit">
 					<NextLink className="flex justify-start items-center gap-1" href="/">
-						<Logo />
+						<Logo fill="currentColor" width="48"  />
 					</NextLink>
 				</NavbarBrand>
 				<ul className="hidden md:flex gap-4 justify-start ml-2">
@@ -58,7 +68,7 @@ export const Navbar = () => {
 				className="hidden sm:flex basis-1/5 sm:basis-full"
 				justify="end"
 			>
-				Benvenuto { user?.name }
+				Benvenuto {user?.name}
 				<NavbarItem className="hidden sm:flex gap-2">
 					<ThemeSwitch />
 				</NavbarItem>
@@ -68,7 +78,7 @@ export const Navbar = () => {
 						onClick={logout}
 						className="text-sm font-normal text-default-600 bg-default-100"
 						variant="flat"
-						startContent={<LogoutIcon/>}
+						startContent={<LogoutIcon />}
 					>
 						Logout
 					</Button>
@@ -82,15 +92,15 @@ export const Navbar = () => {
 
 			<NavbarMenu>
 				<div className="mx-4 mt-2 flex flex-col gap-2">
-					{siteConfig.navMenuItems.map((item, index) => (
+					{siteConfig.navItems.map((item, index) => (
 						<NavbarMenuItem key={`${item}-${index}`}>
 							<Link
 								color={
 									index === 2
 										? "primary"
 										: index === siteConfig.navMenuItems.length - 1
-										? "danger"
-										: "foreground"
+											? "danger"
+											: "foreground"
 								}
 								href="#"
 								size="lg"
