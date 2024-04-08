@@ -112,12 +112,6 @@ const Login = () => {
                 </div>
 
                 <div className="flex items-center justify-end mt-4">
-                    <Link
-                        href="/forgot-password"
-                        className="underline text-sm text-gray-600 hover:text-gray-900">
-                        Forgot your password?
-                    </Link>
-
                     <Button
                         className="ml-3"
                         isLoading={isLoading}
