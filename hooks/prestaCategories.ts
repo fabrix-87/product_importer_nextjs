@@ -1,30 +1,19 @@
 'use client'
 
-import { getAllPrestaCategories } from "@/lib/presta-categories-api"
+import axios from "@/lib/axios"
 import { PrestaCategory } from "@/types"
-import { useEffect, useState } from "react"
+import useSWR from "swr"
 
 export const usePrestaCategories = () => {
-
-    const [prestaCategories, setPrestaCategories] = useState<PrestaCategory[]>([])
-    const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-
-    useEffect(() => {
-        setIsLoading(true)
-        getAllPrestaCategories()
-            .then((response : any) => {
-                if (response.success && response.data !== null) {
-                    setPrestaCategories(response.data)
-                    setIsLoading(false)
-                }else{
-                    setError( response.message ?? '')
-                    setIsLoading(false)
-                }
-            })
-    }, [])
-
-    
+    const { data: prestaCategories, error, isLoading } = useSWR<PrestaCategory, Error>('/api/prestaCategories', () => 
+        axios
+            .get('/api/prestaCategories')
+            .then(res => res.data )
+            .catch(error => {
+                if (error.response.status !== 409) throw error
+            }),
+    )
+   
     return {
         prestaCategories,
         isLoading,

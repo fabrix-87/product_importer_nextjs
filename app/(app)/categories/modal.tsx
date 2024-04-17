@@ -1,11 +1,13 @@
-import Loading from "@/components/Loading";
 import { Category, PrestaCategory } from "@/types";
 import { Button } from "@nextui-org/button";
 import { Chip } from "@nextui-org/chip";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from "@nextui-org/modal";
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@nextui-org/modal";
 import { Select, SelectItem, SelectedItems } from "@nextui-org/select";
 import { Selection } from "@nextui-org/table";
 import React, { FC, Key, useEffect, useState } from "react";
+import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
+import { Box } from "@mui/material";
 
 interface CategoryModalProps {
     isVisible: boolean;
@@ -14,21 +16,6 @@ interface CategoryModalProps {
     prestaCategories: PrestaCategory[];
     onSubmit: (selectedData: Selection | undefined) => void; // Optional callback for form submission
     onClose: () => void;
-}
-
-function flattenCategories(
-    categories: PrestaCategory[],
-    flatArray: PrestaCategory[] = [],
-    parentName: string = ''
-): PrestaCategory[] {
-    categories.forEach((category) => {
-        category.fullName = parentName !== '' ? parentName + ' / ' + category.name : category.name
-        flatArray.push(category);
-        if (category.childrens && category.childrens.length > 0) {
-            flattenCategories(category.childrens, flatArray, category.fullName);
-        }
-    });
-    return flatArray;
 }
 
 function getIdsFromCategories(categories: PrestaCategory[]): Set<string> {
@@ -41,6 +28,10 @@ function getIdsFromCategories(categories: PrestaCategory[]): Set<string> {
     return idSet;
 }
 
+const filterOptions = createFilterOptions({
+    ignoreCase: true,
+});
+
 const CategoryModal: FC<CategoryModalProps> = ({
     isVisible,
     title,
@@ -49,15 +40,9 @@ const CategoryModal: FC<CategoryModalProps> = ({
     onSubmit,
     onClose,
 }) => {
-    const [flatData, setFlatData] = useState<PrestaCategory[]>([])
     const [selectedData, setSelectedData] = useState<Selection>()
     const [isLoading, setIsLoading] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
-
-    useEffect(() => {
-        setFlatData(flattenCategories(prestaCategories))
-        setIsLoading(false)
-    }, [prestaCategories])
 
     useEffect(() => {
         setIsLoading(true)
@@ -102,9 +87,30 @@ const CategoryModal: FC<CategoryModalProps> = ({
                                 {title}
                             </ModalHeader>
                             <ModalBody>
+                                <Autocomplete
+                                    multiple
+                                    id="tags-standard"
+                                    options={prestaCategories}
+                                    filterOptions={filterOptions}
+                                    getOptionLabel={(option) => option.name}
+                                    isOptionEqualToValue={(option, value) => option.name === value.name}
+                                    renderOption={(props, option) => (
+                                        <Box component="li" {...props}>
+                                            {option.fullName}
+                                        </Box>
+                                    )}
+                                    //defaultValue={selectedData}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            variant="standard"
+                                            label="Associa le categorie"
+                                        />
+                                    )}
+                                />
                                 <Select
                                     label="Associa alla categoria"
-                                    items={flatData}
+                                    items={prestaCategories}
                                     variant="bordered"
                                     isMultiline={true}
                                     selectionMode="multiple"

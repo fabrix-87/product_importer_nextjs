@@ -43,7 +43,7 @@ export const Navbar = () => {
 			<NavbarContent className="basis-1/5 sm:basis-full" justify="start">
 				<NavbarBrand as="li" className="gap-3 max-w-fit">
 					<NextLink className="flex justify-start items-center gap-1" href="/">
-						<Logo fill="currentColor" width="48"  />
+						<Logo fill="currentColor" width="48" />
 					</NextLink>
 				</NavbarBrand>
 				<ul className="hidden md:flex gap-4 justify-start ml-2">
@@ -69,10 +69,11 @@ export const Navbar = () => {
 				justify="end"
 			>
 				Benvenuto {user?.name}
+				{ /*
 				<NavbarItem className="hidden sm:flex gap-2">
 					<ThemeSwitch />
 				</NavbarItem>
-
+				*/ }
 				<NavbarItem className="hidden md:flex">
 					<Button
 						onClick={logout}
@@ -86,7 +87,9 @@ export const Navbar = () => {
 			</NavbarContent>
 
 			<NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
-				<ThemeSwitch />
+				{
+					// <ThemeSwitch /> 
+				}
 				<NavbarMenuToggle />
 			</NavbarContent>
 

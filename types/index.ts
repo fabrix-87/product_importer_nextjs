@@ -65,10 +65,10 @@ export type Category = {
 export type PrestaCategory = {
   id: number;
   presta_id?: number;
-  name?: string;
+  name: string;
+  fullName: string;
   parent_id?: number;
   active?: number;
-  fullName?: string;
   childrens?: PrestaCategory[]
 }
 

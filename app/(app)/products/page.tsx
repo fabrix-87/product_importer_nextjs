@@ -1,6 +1,6 @@
 'use client'
 
-import React, { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
+import React, { ChangeEvent, useCallback, useMemo, useState } from "react";
 
 import { Icon } from '@iconify/react';
 import { columns, statusOptions } from "./data";

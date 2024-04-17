@@ -1,8 +1,7 @@
 'use client'
 
-import { filterType } from "@/app/(app)/categories/data"
 import { getAllProducts } from "@/lib/product-api"
-import { Product } from "@/types"
+import { Product, filterType } from "@/types"
 import { useEffect, useState } from "react"
 
 export const useProducts = (params: {
