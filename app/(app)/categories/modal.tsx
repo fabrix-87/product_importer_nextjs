@@ -1,13 +1,12 @@
 import { Category, PrestaCategory } from "@/types";
 import { Button } from "@nextui-org/button";
-import { Chip } from "@nextui-org/chip";
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@nextui-org/modal";
-import { Select, SelectItem, SelectedItems } from "@nextui-org/select";
 import { Selection } from "@nextui-org/table";
 import React, { FC, Key, useEffect, useState } from "react";
 import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
-import { Box } from "@mui/material";
+import { AutocompleteProps } from "@nextui-org/autocomplete";
+import { Chip } from "@mui/material";
 
 interface CategoryModalProps {
     isVisible: boolean;
@@ -40,16 +39,9 @@ const CategoryModal: FC<CategoryModalProps> = ({
     onSubmit,
     onClose,
 }) => {
-    const [selectedData, setSelectedData] = useState<Selection>()
+    const [selectedData, setSelectedData] = useState<PrestaCategory[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
-
-    useEffect(() => {
-        setIsLoading(true)
-        if (category.presta_categories)
-            setSelectedData(getIdsFromCategories(category.presta_categories))
-        setIsLoading(false)
-    }, [category])
 
     useEffect(() => {
         setIsOpen(isVisible)
@@ -60,13 +52,12 @@ const CategoryModal: FC<CategoryModalProps> = ({
         onClose()
     }
 
-    const removeElement = (key: Key | undefined) => {
-        if (selectedData == undefined || selectedData == 'all' || key == undefined)
-            return;
-        const newData = selectedData
-        newData.delete(key)
-        setSelectedData(newData)
-    }
+    const handleSelectionChange = (
+        event: React.ChangeEvent<HTMLInputElement | undefined>,
+        newValue: PrestaCategory[] | null
+    ) => {
+        setSelectedData(newValue);
+    };
 
     return (
         <>
@@ -92,62 +83,24 @@ const CategoryModal: FC<CategoryModalProps> = ({
                                     id="tags-standard"
                                     options={prestaCategories}
                                     filterOptions={filterOptions}
-                                    getOptionLabel={(option) => option.name}
-                                    isOptionEqualToValue={(option, value) => option.name === value.name}
-                                    renderOption={(props, option) => (
-                                        <Box component="li" {...props}>
-                                            {option.fullName}
-                                        </Box>
+                                    getOptionLabel={(option: PrestaCategory) => option.name}
+                                    isOptionEqualToValue={(option: PrestaCategory, value: PrestaCategory) => option.name === value.name}
+                                    renderOption={(props: AutocompleteProps<PrestaCategory>, option: PrestaCategory) => (
+                                        <li {...props} key={option.id}>
+                                            {option.fullName || option.name}
+                                        </li>
                                     )}
-                                    //defaultValue={selectedData}
-                                    renderInput={(params) => (
-                                        <TextField
-                                            {...params}
-                                            variant="standard"
-                                            label="Associa le categorie"
-                                        />
+                                    renderTags={(tagValue, getTagProps) => {
+                                        return tagValue.map((option: PrestaCategory, index) => (
+                                            <Chip {...getTagProps({ index })} key={option.id} label={option.name} />
+                                        ))
+                                    }}
+                                    value={selectedData}
+                                    onChange={handleSelectionChange}
+                                    renderInput={(params: AutocompleteProps<PrestaCategory>) => (
+                                        <TextField {...params} variant="standard" label="Associa le categorie" />
                                     )}
                                 />
-                                <Select
-                                    label="Associa alla categoria"
-                                    items={prestaCategories}
-                                    variant="bordered"
-                                    isMultiline={true}
-                                    selectionMode="multiple"
-                                    placeholder="Seleziona una categoria"
-                                    labelPlacement="outside"
-                                    defaultSelectedKeys={selectedData}
-                                    onSelectionChange={setSelectedData}
-                                    isLoading={isLoading}
-                                    classNames={{
-                                        trigger: "min-h-unit-12 py-2 ",
-                                    }}
-                                    renderValue={(items: SelectedItems<PrestaCategory>) => {
-                                        return (
-                                            <div className="flex flex-wrap gap-2">
-                                                {items.map((item) => (
-                                                    <Chip
-                                                        key={item.key}
-                                                        onClose={() => removeElement(item.key)}
-                                                    >
-                                                        {item.data?.name}</Chip>
-                                                ))}
-                                            </div>
-                                        );
-                                    }}
-                                >
-                                    {
-                                        (prestaCategory) => (
-                                            <SelectItem
-                                                key={prestaCategory.id}
-                                                textValue={prestaCategory.name}
-                                                title={prestaCategory.fullName}
-                                            >
-                                                {prestaCategory.fullName}
-                                            </SelectItem>
-                                        )
-                                    }
-                                </Select>
                             </ModalBody>
                             <ModalFooter>
                                 <Button color="danger" variant="light" onPress={onClose}>
