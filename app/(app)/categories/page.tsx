@@ -19,7 +19,7 @@ import {
 } from "@nextui-org/table";
 import { Chip } from "@nextui-org/chip";
 import { Pagination } from "@nextui-org/pagination";
-import { Category, filterType } from "@/types";
+import { Category, PrestaCategory, filterType } from "@/types";
 import Loading from "@/components/Loading";
 import { title } from "@/components/primitives";
 import { useCategories } from "@/hooks/categories";
@@ -45,7 +45,7 @@ export default function CategoryPage() {
 
 	const [isModalOpened, setIsModalOpened] = useState(false)
 	const [modalTitle, setModalTitle] = useState('')
-	const [modalCategory, setModalCategory] = useState<Category>({})
+	const [modalCategory, setModalCategory] = useState<Category>({} as Category)
 
 	const [supplierFilter, setSupplierFilter] = useState<Selection>("all")
 	const [hasCategoryFilter, setHasCategoryFilter] = useState<Selection>("all")
@@ -71,9 +71,9 @@ export default function CategoryPage() {
 		setIsModalOpened(false)
 	}
 
-	const handleSubmitModal = (selectedData: Selection|undefined) => {
+	const handleSubmitModal = (selectedData: PrestaCategory[]) => {
 		if(modalCategory.id !== undefined && selectedData !== undefined){
-			syncCategories(modalCategory.id, Array.from(selectedData, (elem) => parseInt(elem.toString())))
+			syncCategories(modalCategory.id, Array.from(selectedData, (elem) => elem.id))
 			setRefresh(true)
 		}
 		
@@ -264,6 +264,7 @@ export default function CategoryPage() {
 		);
 	}, [
 		filterValue,
+		filters,
 		onSearchChange,
 		suppliers,
 		supplierFilter,

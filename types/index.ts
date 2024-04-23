@@ -59,7 +59,7 @@ export type Category = {
   name?: string;
   parent?: Category|null;
   supplier?: Supplier;
-  presta_categories?: PrestaCategory[];
+  presta_categories: PrestaCategory[];
 }
 
 export type PrestaCategory = {

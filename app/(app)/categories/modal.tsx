@@ -1,11 +1,9 @@
 import { Category, PrestaCategory } from "@/types";
 import { Button } from "@nextui-org/button";
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@nextui-org/modal";
-import { Selection } from "@nextui-org/table";
-import React, { FC, Key, useEffect, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
-import { AutocompleteProps } from "@nextui-org/autocomplete";
 import { Chip } from "@mui/material";
 
 interface CategoryModalProps {
@@ -13,18 +11,8 @@ interface CategoryModalProps {
     title: string;
     category: Category;
     prestaCategories: PrestaCategory[];
-    onSubmit: (selectedData: Selection | undefined) => void; // Optional callback for form submission
+    onSubmit: (selectedData: PrestaCategory[]) => void; // Optional callback for form submission
     onClose: () => void;
-}
-
-function getIdsFromCategories(categories: PrestaCategory[]): Set<string> {
-    const idSet = new Set<string>();
-
-    categories.forEach((category) => {
-        idSet.add(category.id.toString());
-    });
-
-    return idSet;
 }
 
 const filterOptions = createFilterOptions({
@@ -40,7 +28,6 @@ const CategoryModal: FC<CategoryModalProps> = ({
     onClose,
 }) => {
     const [selectedData, setSelectedData] = useState<PrestaCategory[]>([])
-    const [isLoading, setIsLoading] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
 
     useEffect(() => {
@@ -53,11 +40,15 @@ const CategoryModal: FC<CategoryModalProps> = ({
     }
 
     const handleSelectionChange = (
-        event: React.ChangeEvent<HTMLInputElement | undefined>,
-        newValue: PrestaCategory[] | null
+        event: React.SyntheticEvent<Element, Event>,
+        newValue: unknown
     ) => {
-        setSelectedData(newValue);
+        setSelectedData(newValue as PrestaCategory[])
     };
+
+    useEffect(() => {
+        setSelectedData(category.presta_categories)
+    }, [category])
 
     return (
         <>
@@ -83,21 +74,25 @@ const CategoryModal: FC<CategoryModalProps> = ({
                                     id="tags-standard"
                                     options={prestaCategories}
                                     filterOptions={filterOptions}
-                                    getOptionLabel={(option: PrestaCategory) => option.name}
-                                    isOptionEqualToValue={(option: PrestaCategory, value: PrestaCategory) => option.name === value.name}
-                                    renderOption={(props: AutocompleteProps<PrestaCategory>, option: PrestaCategory) => (
-                                        <li {...props} key={option.id}>
-                                            {option.fullName || option.name}
+                                    //getOptionLabel={(option: PrestaCategory) => option.name}
+                                    getOptionLabel={(option: unknown) => (option as PrestaCategory).name}
+                                    isOptionEqualToValue={(option, value) => (option as PrestaCategory).name === (value as PrestaCategory).name}
+                                    renderOption={(props, option) => (
+                                        <li {...props} key={(option as PrestaCategory).id}>
+                                            {(option as PrestaCategory).fullName || (option as PrestaCategory).name}
                                         </li>
                                     )}
                                     renderTags={(tagValue, getTagProps) => {
-                                        return tagValue.map((option: PrestaCategory, index) => (
-                                            <Chip {...getTagProps({ index })} key={option.id} label={option.name} />
+                                        return tagValue.map((option, index) => (
+                                            <Chip {...getTagProps({ index })}
+                                                key={(option as PrestaCategory).id}
+                                                label={(option as PrestaCategory).name} />
                                         ))
                                     }}
+                                    defaultValue={selectedData}
                                     value={selectedData}
                                     onChange={handleSelectionChange}
-                                    renderInput={(params: AutocompleteProps<PrestaCategory>) => (
+                                    renderInput={(params) => (
                                         <TextField {...params} variant="standard" label="Associa le categorie" />
                                     )}
                                 />
