@@ -32,7 +32,7 @@ export default function ProductsPage() {
 	const [page, setPage] = useState(1);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 
-	const { products, isLoading, totalPages, totalProducts } = useProducts({
+	const { products, isLoading, totalPages, totalProducts, toggleStatus, setRefresh } = useProducts({
 		search: filterValue,
 		page,
 		limit: rowsPerPage
@@ -52,6 +52,10 @@ export default function ProductsPage() {
 		return columns.filter((column) => Array.from(visibleColumns).includes(column.uid));
 	}, [visibleColumns]);
 
+	const onToggleProduct = (id: number, currentStatus: number) => {
+		toggleStatus(id, currentStatus)
+		setRefresh(true)
+	}
 	/*
 
 	const filteredItems = useMemo(() => {
@@ -89,7 +93,7 @@ export default function ProductsPage() {
 	*/
 
 	const renderCell = useCallback((product: Product, columnKey: React.Key) => {
-		const cellValue = product[columnKey as keyof Product];
+		//const cellValue = product[columnKey as keyof Product];
 		switch (columnKey) {
 			case "id":
 				return (
@@ -133,7 +137,9 @@ export default function ProductsPage() {
 							<DropdownMenu>
 								<DropdownItem aria-label="Dettagli">Dettagli</DropdownItem>
 								<DropdownItem aria-label="Modifica">Modifica</DropdownItem>
-								<DropdownItem aria-label="Elimina">Elimina</DropdownItem>
+								<DropdownItem aria-label="Disabilita" onClick={() => onToggleProduct(product.id, product.active)}>
+									{ product.active == 1 ? 'Disabilita' : 'Abilita' }
+								</DropdownItem>
 							</DropdownMenu>
 						</Dropdown>
 					</div>

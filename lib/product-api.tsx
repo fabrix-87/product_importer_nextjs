@@ -41,3 +41,17 @@ export const getProductById = async (id: number): Promise<ApiResponse<Product>> 
         }
     }
 }
+
+export const toggleProductStatus = async (id: number, active: number): Promise<ApiResponse<Product>> => {
+    try {
+        const newStatus = (active == 1) ? 'disabled' : 'active'
+        const response = await axios.patch('api/products/updateStatus/' + id, {status: newStatus})
+        return response.data
+    } catch (error: any) {
+        return {
+            data: null,
+            success: false,
+            message: error.message
+        }
+    }
+}
